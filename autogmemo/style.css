@@ -54,10 +54,16 @@ header {
     display: flex;
     gap: 15px;
     margin-bottom: 15px;
+    flex-wrap: wrap;
 }
 
 .form-group {
     flex: 1;
+    min-width: 200px;
+}
+
+.full-width {
+    flex: 1 0 100% !important;
 }
 
 label {
@@ -81,6 +87,63 @@ input:focus, select:focus {
     border-color: #007bff;
     outline: none;
     box-shadow: 0 0 5px rgba(0,123,255,0.3);
+}
+
+/* Specific styling for business type field */
+#business_type {
+    font-size: 14px;
+    padding: 12px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    background: #f8f9fa !important;
+    color: #333;
+    text-align: center;
+    font-weight: 600;
+}
+
+/* Optional price field styling */
+.unit-price::placeholder {
+    color: #999;
+    font-style: italic;
+}
+
+/* Dash styling for empty prices */
+.row-total {
+    color: #666;
+    font-weight: bold;
+}
+
+/* Price column hiding/showing */
+.price-field,
+.price-column,
+.total-column {
+    transition: all 0.3s ease;
+}
+
+.price-field.hidden,
+.price-column.hidden,
+.total-column.hidden {
+    display: none !important;
+}
+
+/* Calculation section hiding */
+.calculation-section.hidden {
+    display: none !important;
+}
+
+/* Table column adjustments for চালান */
+.items-table-bangla th:nth-child(3),
+.items-table-bangla th:nth-child(4),
+.items-table-bangla td:nth-child(3),
+.items-table-bangla td:nth-child(4) {
+    transition: all 0.3s ease;
+}
+
+/* Memo number container */
+.memo-number-container {
+    display: flex;
+    gap: 10px;
+    align-items: center;
 }
 
 /* Button Styles with Custom Colors */
@@ -134,6 +197,18 @@ button:hover {
 
 .clear-btn:hover {
     background: linear-gradient(135deg, #545b62, #484e53);
+}
+
+/* Download Button */
+.download-btn {
+    background: linear-gradient(135deg, #6f42c1, #5a2d91);
+    padding: 12px 25px;
+    font-size: 16px;
+    margin-right: 10px;
+}
+
+.download-btn:hover {
+    background: linear-gradient(135deg, #5a2d91, #4a2378);
 }
 
 /* Custom Color Buttons */
@@ -227,6 +302,7 @@ th {
     border-radius: 8px;
     margin: 20px 0;
     border: 2px solid #007bff;
+    transition: all 0.3s ease;
 }
 
 .form-actions {
@@ -295,8 +371,15 @@ th {
 
 .shop-contact-bangla {
     font-size: 12px;
-    margin-bottom: 5px;
+    margin-bottom: 3px;
     color: #555;
+}
+
+.business-type-bangla {
+    font-size: 11px;
+    margin-bottom: 5px;
+    color: #666;
+    font-style: italic;
 }
 
 .memo-title-bangla {
@@ -426,6 +509,12 @@ th {
     .preview-header, .preview-actions {
         display: none !important;
     }
+    
+    /* Hide price columns in print for চালান */
+    .price-column.hidden,
+    .total-column.hidden {
+        display: none !important;
+    }
 }
 
 /* Success message */
@@ -437,6 +526,18 @@ th {
     margin: 10px 0;
     text-align: center;
     border: 1px solid #c3e6cb;
+}
+
+/* Loading message */
+.loading-message {
+    background: #d1ecf1;
+    color: #0c5460;
+    padding: 20px;
+    border-radius: 5px;
+    margin: 10px 0;
+    text-align: center;
+    border: 1px solid #bee5eb;
+    font-size: 16px;
 }
 
 /* Button container styles */
@@ -452,4 +553,392 @@ th {
     gap: 10px;
     margin: 15px 0;
     flex-wrap: wrap;
+}
+
+/* Customer details section */
+.customer-details {
+    background: #fff3cd;
+    padding: 15px;
+    border-radius: 5px;
+    margin: 10px 0;
+    border: 1px solid #ffeaa7;
+}
+
+/* Animation for showing/hiding calculation section */
+.calculation-section {
+    animation: fadeIn 0.5s ease-in-out;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Optional field indicator */
+.optional-field::after {
+    content: " (ঐচ্ছিক)";
+    color: #6c757d;
+    font-size: 0.9em;
+    font-style: italic;
+}
+
+/* Price column specific styles */
+.unit-price {
+    background-color: #f8f9fa;
+}
+
+.unit-price:focus {
+    background-color: #fff;
+}
+
+/* Row total styling variations */
+.row-total.has-price {
+    color: #28a745;
+    font-weight: bold;
+}
+
+.row-total.no-price {
+    color: #6c757d;
+    font-style: italic;
+}
+
+/* Discount field styling */
+#discount {
+    background-color: #fff3cd;
+    border-color: #ffeaa7;
+}
+
+#discount:focus {
+    background-color: #fff;
+    border-color: #007bff;
+}
+
+/* Readonly field styling */
+input[readonly] {
+    background-color: #e9ecef;
+    cursor: not-allowed;
+}
+
+/* Select dropdown styling */
+select {
+    background-color: white;
+    cursor: pointer;
+}
+
+select:focus {
+    background-color: #fff;
+}
+
+/* Table row hover effect */
+.item-row:hover {
+    background-color: #f8f9fa;
+}
+
+/* Remove button hover effect */
+.remove-btn:hover {
+    transform: scale(1.05);
+}
+
+/* Preview section transitions */
+.memo-preview-section {
+    animation: slideDown 0.5s ease-in-out;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Scrollbar styling for webkit browsers */
+::-webkit-scrollbar {
+    width: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #a8a8a8;
+}
+
+/* Focus styles for accessibility */
+button:focus,
+input:focus,
+select:focus {
+    outline: 2px solid #007bff;
+    outline-offset: 2px;
+}
+
+/* Disabled button styling */
+button:disabled {
+    background: #6c757d !important;
+    cursor: not-allowed;
+    transform: none !important;
+    box-shadow: none !important;
+}
+
+/* Error state styling */
+input.error {
+    border-color: #dc3545;
+    background-color: #f8d7da;
+}
+
+.error-message {
+    color: #dc3545;
+    font-size: 12px;
+    margin-top: 5px;
+}
+
+/* Success state styling */
+input.success {
+    border-color: #28a745;
+    background-color: #d4edda;
+}
+
+/* Warning state styling */
+input.warning {
+    border-color: #ffc107;
+    background-color: #fff3cd;
+}
+
+/* Responsive design for mobile */
+@media (max-width: 768px) {
+    .shop-info-section .form-group {
+        flex: 1 0 100%;
+    }
+    
+    .shop-info-section .form-row {
+        gap: 10px;
+    }
+    
+    .container {
+        padding: 10px;
+        margin: 10px;
+    }
+    
+    .form-row {
+        flex-direction: column;
+    }
+    
+    .form-group {
+        min-width: 100%;
+    }
+    
+    .button-container {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .button-container select,
+    .button-container button {
+        margin: 5px 0;
+    }
+    
+    .memo-number-container {
+        flex-direction: column;
+    }
+    
+    .memo-number-container select,
+    .memo-number-container input {
+        margin: 5px 0;
+    }
+    
+    table {
+        font-size: 12px;
+    }
+    
+    th, td {
+        padding: 5px;
+    }
+    
+    .form-actions {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+    
+    .form-actions button {
+        margin: 5px 0;
+    }
+    
+    /* Mobile adjustments for price columns */
+    .price-column,
+    .total-column {
+        display: table-cell !important;
+    }
+    
+    .price-column.hidden,
+    .total-column.hidden {
+        display: none !important;
+    }
+}
+
+/* Extra small devices */
+@media (max-width: 480px) {
+    .container {
+        padding: 5px;
+        margin: 5px;
+    }
+    
+    header h1 {
+        font-size: 20px;
+    }
+    
+    .shop-info-section h3,
+    .items-section h3 {
+        font-size: 16px;
+    }
+    
+    button {
+        padding: 8px 15px;
+        font-size: 12px;
+    }
+    
+    .bangla-memo {
+        width: 95%;
+        padding: 5px;
+    }
+    
+    /* Mobile table adjustments */
+    table {
+        display: block;
+        overflow-x: auto;
+        white-space: nowrap;
+    }
+    
+    th, td {
+        padding: 3px;
+        font-size: 11px;
+    }
+}
+
+/* Cash memo type specific styles */
+.cash-memo-mode .price-field,
+.cash-memo-mode .price-column,
+.cash-memo-mode .total-column,
+.cash-memo-mode .calculation-section {
+    display: block !important;
+}
+
+.chalan-mode .price-field,
+.chalan-mode .price-column,
+.chalan-mode .total-column,
+.chalan-mode .calculation-section {
+    display: none !important;
+}
+
+/* Smooth transitions for all dynamic elements */
+.price-field,
+.price-column,
+.total-column,
+.calculation-section,
+.unit-price,
+.row-total {
+    transition: all 0.3s ease-in-out;
+}
+
+/* Visual indicator for chalan mode */
+.chalan-indicator {
+    background: #fff3cd;
+    border: 1px solid #ffeaa7;
+    padding: 10px;
+    border-radius: 5px;
+    margin: 10px 0;
+    text-align: center;
+    font-weight: bold;
+    color: #856404;
+}
+
+/* Cash memo indicator */
+.cash-memo-indicator {
+    background: #d4edda;
+    border: 1px solid #c3e6cb;
+    padding: 10px;
+    border-radius: 5px;
+    margin: 10px 0;
+    text-align: center;
+    font-weight: bold;
+    color: #155724;
+}
+
+/* Mode switcher animation */
+.mode-switcher {
+    transition: all 0.3s ease;
+}
+
+.mode-switcher:hover {
+    transform: scale(1.02);
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+
+/* Table header adjustments for different modes */
+.items-table-bangla.cash-memo th:nth-child(1) { width: 5%; }
+.items-table-bangla.cash-memo th:nth-child(2) { width: 50%; }
+.items-table-bangla.cash-memo th:nth-child(3) { width: 15%; }
+.items-table-bangla.cash-memo th:nth-child(4) { width: 15%; }
+.items-table-bangla.cash-memo th:nth-child(5) { width: 15%; }
+
+.items-table-bangla.chalan th:nth-child(1) { width: 5%; }
+.items-table-bangla.chalan th:nth-child(2) { width: 65%; }
+.items-table-bangla.chalan th:nth-child(3) { width: 15%; }
+.items-table-bangla.chalan th:nth-child(4) { width: 15%; }
+
+/* Print mode adjustments */
+@media print {
+    .cash-memo-mode .price-column,
+    .cash-memo-mode .total-column {
+        display: table-cell !important;
+    }
+    
+    .chalan-mode .price-column,
+    .chalan-mode .total-column {
+        display: none !important;
+    }
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+    .shop-info-section {
+        border-left: 4px solid #0056b3;
+    }
+    
+    .calculation-section {
+        border: 2px solid #0056b3;
+    }
+    
+    .memo-preview-section {
+        border: 2px solid #1e7e34;
+    }
+    
+    button {
+        border: 1px solid rgba(0,0,0,0.1);
+    }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+    * {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
 }

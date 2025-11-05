@@ -1,6 +1,9 @@
 <?php
 include 'config.php';
-$memo_number = "GM" . date('Ymd') . rand(100, 999);
+
+// Generate memo number based on type (C for memo, B for invoice)
+$memo_type = isset($_GET['type']) ? $_GET['type'] : 'C';
+$memo_number = generateMemoNumber($pdo, $memo_type);
 ?>
 <!DOCTYPE html>
 <html lang="bn">
@@ -11,6 +14,7 @@ $memo_number = "GM" . date('Ymd') . rand(100, 999);
     <link rel="stylesheet" href="style.css">
     <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 </head>
 <body>
     <div class="container">
@@ -19,27 +23,39 @@ $memo_number = "GM" . date('Ymd') . rand(100, 999);
         </header>
 
         <div class="memo-form no-print">
-            <!-- Shop Information Section -->
+            <!-- Company Information Section -->
             <div class="shop-info-section">
-                <h3>দোকানের তথ্য</h3>
+                <h3>কম্পানির তথ্য</h3>
                 <div class="form-row">
                     <div class="form-group">
-                        <label>দোকানের নাম:</label>
-                        <input type="text" id="shop_name" placeholder="আপনার দোকানের নাম লিখুন" value="আপনার দোকানের নাম">
+                        <label>কম্পানির নাম:</label>
+                        <input type="text" id="shop_name" placeholder="আপনার কম্পানির নাম লিখুন" value="আপনার কম্পানির নাম">
                     </div>
                     <div class="form-group">
-                        <label>ঠিকানা:</label>
-                        <input type="text" id="shop_address" placeholder="দোকানের ঠিকানা লিখুন" value="আইডেন সেন্টার, নিউ মার্কেট, ঢাকা">
+                        <label>ক্যাশ মেমো/চালান:</label>
+                        <select id="cash_memo_type" onchange="togglePriceSection()" style="width: 100%; padding: 10px;">
+                            <option value="ক্যাশ মেমো">ক্যাশ মেমো</option>
+                            <option value="চালান">চালান</option>
+                            <option value="ক্যাশ রিসিট">ক্যাশ রিসিট</option>
+                        </select>
                     </div>
                 </div>
                 <div class="form-row">
-                    <div class="form-group">
-                        <label>ফোন নম্বর:</label>
-                        <input type="text" id="shop_phone" placeholder="দোকানের ফোন নম্বর" value="০১৭১২-৩৪৫৬৭৮">
+                    <div class="form-group full-width">
+                        <label>মোবাইল নাম্বার:</label>
+                        <input type="text" id="mobile_number" placeholder="মোবাইল নাম্বার লিখুন" value="০১৭১২-৩৪৫৬৭৮">
                     </div>
-                    <div class="form-group">
-                        <label>টিন নম্বর:</label>
-                        <input type="text" id="shop_tin" placeholder="টিন নম্বর (ঐচ্ছিক)" value="১২৩৪৬৫৭৮৯০১২৩">
+                </div>
+                <div class="form-row">
+                    <div class="form-group full-width">
+                        <label>ব্যবসার ধরন:</label>
+                        <input type="text" id="business_type" value="এখানে গার্মেন্টস কোয়ালিটি ওয়েস্টিজ মাল ক্রয় ও বিক্রয় করা হয়" readonly style="background-color: #f8f9fa; font-weight: bold; text-align: center;">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group full-width">
+                        <label>ঠিকানা:</label>
+                        <input type="text" id="shop_address" placeholder="কম্পানির ঠিকানা লিখুন" value="আইডেন সেন্টার, নিউ মার্কেট, ঢাকা">
                     </div>
                 </div>
             </div>
@@ -47,8 +63,14 @@ $memo_number = "GM" . date('Ymd') . rand(100, 999);
             <!-- Memo Information Section -->
             <div class="form-row">
                 <div class="form-group">
-                    <label>মেমো নং:</label>
-                    <input type="text" id="memo_number" value="<?php echo $memo_number; ?>">
+                    <label>নং:</label>
+                    <div class="memo-number-container">
+                        <select id="memo_type" onchange="updateMemoNumber()" style="width: 80px; margin-right: 10px;">
+                            <option value="C">মেমো (C)</option>
+                            <option value="B">চালান (B)</option>
+                        </select>
+                        <input type="text" id="memo_number" value="<?php echo $memo_number; ?>" readonly style="flex: 1;">
+                    </div>
                 </div>
                 <div class="form-group">
                     <label>তারিখ:</label>
@@ -69,8 +91,17 @@ $memo_number = "GM" . date('Ymd') . rand(100, 999);
 
             <div class="customer-details" id="customer_details" style="display:none;">
                 <div class="form-row">
-                    <input type="text" id="customer_name" placeholder="গ্রাহকের নাম">
-                    <input type="text" id="customer_phone" placeholder="গ্রাহকের ফোন নম্বর">
+                    <div class="form-group">
+                        <input type="text" id="customer_name" placeholder="গ্রাহকের নাম">
+                    </div>
+                    <div class="form-group">
+                        <input type="text" id="customer_phone" placeholder="গ্রাহকের ফোন নম্বর">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group full-width">
+                        <input type="text" id="customer_address" placeholder="গ্রাহকের ঠিকানা">
+                    </div>
                 </div>
             </div>
 
@@ -78,19 +109,27 @@ $memo_number = "GM" . date('Ymd') . rand(100, 999);
             <div class="items-section">
                 <h3>পণ্যের তালিকা</h3>
                 
-                <div class="manual-product-section">
+                <div class="manual-product-section" id="manual_product_section">
                     <div class="form-row">
                         <div class="form-group">
-                            <label>নতুন পণ্যের নাম:</label>
-                            <input type="text" id="new_product_name" placeholder="পণ্যের নাম লিখুন">
+                            <label>পণ্যের বিবরণ:</label>
+                            <input type="text" id="new_product_name" placeholder="পণ্যের বিবরণ লিখুন">
                         </div>
                         <div class="form-group">
-                            <label>দর:</label>
-                            <input type="number" id="new_product_price" placeholder="দর লিখুন" step="0.01">
+                            <label>বস্তা:</label>
+                            <input type="number" id="new_product_bags" placeholder="বস্তা সংখ্যা" step="0.01" value="0">
                         </div>
                         <div class="form-group">
                             <label>পরিমাণ:</label>
                             <input type="number" id="new_product_quantity" placeholder="পরিমাণ" step="0.01" value="1">
+                        </div>
+                        <div class="form-group price-field">
+                            <label>দর:</label>
+                            <input type="number" id="new_product_price" placeholder="দর লিখুন" step="0.01">
+                        </div>
+                        <div class="form-group price-field">
+                            <label>টাকা:</label>
+                            <input type="number" id="new_product_amount" placeholder="টাকা" step="0.01" readonly>
                         </div>
                         <div class="form-group">
                             <button type="button" onclick="addManualProduct()" class="add-product-btn" style="margin-top: 25px;">পণ্য যোগ করুন</button>
@@ -101,10 +140,11 @@ $memo_number = "GM" . date('Ymd') . rand(100, 999);
                 <table id="items_table">
                     <thead>
                         <tr>
-                            <th>পণ্য</th>
+                            <th>পণ্যের বিবরণ</th>
+                            <th>বস্তা</th>
                             <th>পরিমাণ</th>
-                            <th>দর</th>
-                            <th>মোট</th>
+                            <th class="price-column">দর</th>
+                            <th class="price-column">টাকা</th>
                             <th>অ্যাকশন</th>
                         </tr>
                     </thead>
@@ -115,9 +155,10 @@ $memo_number = "GM" . date('Ymd') . rand(100, 999);
                                     <option value="">পণ্য নির্বাচন করুন</option>
                                 </select>
                             </td>
-                            <td><input type="number" class="quantity" step="0.01" value="1" onchange="calculateRowTotal(this)"></td>
-                            <td><input type="number" class="unit-price" step="0.01" onchange="calculateRowTotal(this)"></td>
-                            <td><span class="row-total">0.00</span></td>
+                            <td><input type="number" class="bags" step="0.01" value="0" placeholder="বস্তা"></td>
+                            <td><input type="number" class="quantity" step="0.01" value="1" placeholder="পরিমাণ"></td>
+                            <td class="price-column"><input type="number" class="unit-price" step="0.01" placeholder="দর" onchange="calculateRowTotal(this)"></td>
+                            <td class="price-column"><input type="number" class="amount" step="0.01" placeholder="টাকা" readonly></td>
                             <td><button type="button" class="remove-btn" onclick="removeRow(this)">মুছুন</button></td>
                         </tr>
                     </tbody>
@@ -129,7 +170,7 @@ $memo_number = "GM" . date('Ymd') . rand(100, 999);
             </div>
 
             <!-- Calculation Section -->
-            <div class="calculation-section">
+            <div class="calculation-section" id="calculation_section">
                 <div class="form-row">
                     <div class="form-group">
                         <label>সাবটোটাল:</label>
@@ -150,6 +191,7 @@ $memo_number = "GM" . date('Ymd') . rand(100, 999);
             <div class="form-actions">
                 <button type="button" onclick="generateMemo()" class="generate-btn">📄 মেমো জেনারেট করুন</button>
                 <button type="button" onclick="saveMemo()" class="save-btn">💾 মেমো সেভ করুন</button>
+                <button type="button" onclick="downloadMemo()" class="download-btn">📥 মেমো ডাউনলোড করুন</button>
                 <button type="button" onclick="printMemo()" class="print-btn">🖨️ মেমো প্রিন্ট করুন</button>
                 <button type="button" onclick="clearForm()" class="clear-btn">🔄 নতুন মেমো</button>
             </div>
@@ -163,6 +205,7 @@ $memo_number = "GM" . date('Ymd') . rand(100, 999);
             </div>
             <div id="memo_preview" class="memo-preview"></div>
             <div class="preview-actions">
+                <button type="button" onclick="downloadMemo()" class="download-btn">📥 মেমো ডাউনলোড করুন</button>
                 <button type="button" onclick="printMemo()" class="print-preview-btn">🖨️ মেমো প্রিন্ট করুন</button>
                 <button type="button" onclick="closePreview()" class="close-preview-btn">✖️ প্রিভিউ বন্ধ করুন</button>
             </div>

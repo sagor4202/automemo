@@ -85,4 +85,24 @@ try {
 } catch (PDOException $e) {
     // Continue if sample data exists
 }
+
+// Function to generate memo number
+function generateMemoNumber($pdo, $type = 'C') {
+    $currentYear = date('y'); // Last two digits of current year
+    $prefix = $type . $currentYear;
+    
+    // Get the last memo number for this prefix
+    $stmt = $pdo->prepare("SELECT memo_number FROM memos WHERE memo_number LIKE ? ORDER BY id DESC LIMIT 1");
+    $stmt->execute([$prefix . '%']);
+    $lastMemo = $stmt->fetch(PDO::FETCH_ASSOC);
+    
+    if ($lastMemo) {
+        $lastNumber = intval(substr($lastMemo['memo_number'], 3));
+        $newNumber = $lastNumber + 1;
+    } else {
+        $newNumber = 1;
+    }
+    
+    return $prefix . str_pad($newNumber, 4, '0', STR_PAD_LEFT);
+}
 ?>
