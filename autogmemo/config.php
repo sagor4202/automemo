@@ -36,6 +36,7 @@ $tables = [
         memo_number VARCHAR(50) UNIQUE NOT NULL,
         customer_id INT,
         customer_name VARCHAR(100),
+        customer_address TEXT,
         subtotal DECIMAL(10,2) DEFAULT 0,
         discount DECIMAL(10,2) DEFAULT 0,
         total DECIMAL(10,2) DEFAULT 0,
@@ -49,16 +50,22 @@ $tables = [
         memo_id INT,
         product_id INT,
         product_name VARCHAR(100),
+        bags DECIMAL(10,2) DEFAULT 0,
         quantity DECIMAL(10,2) NOT NULL,
+        unit VARCHAR(20) DEFAULT 'কে.জি',
         unit_price DECIMAL(10,2) NOT NULL,
-        total_price DECIMAL(10,2) NOT NULL,
+        amount DECIMAL(10,2) NOT NULL,
         FOREIGN KEY (memo_id) REFERENCES memos(id) ON DELETE CASCADE,
         FOREIGN KEY (product_id) REFERENCES products(id)
     )"
 ];
 
 foreach ($tables as $table) {
-    $pdo->exec($table);
+    try {
+        $pdo->exec($table);
+    } catch (PDOException $e) {
+        // Continue if table already exists
+    }
 }
 
 // Insert sample data with Bangla names
@@ -86,8 +93,8 @@ try {
     // Continue if sample data exists
 }
 
-// Function to generate memo number
-function generateMemoNumber($pdo, $type = 'C') {
+// Function to generate memo number - UPDATED
+function generateMemoNumber($pdo, $type = 'B') {
     $currentYear = date('y'); // Last two digits of current year
     $prefix = $type . $currentYear;
     

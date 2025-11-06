@@ -1,8 +1,87 @@
+// Bengali Number to Words Converter
+function numberToBengaliWords(number) {
+    const units = ['', 'এক', 'দুই', 'তিন', 'চার', 'পাঁচ', 'ছয়', 'সাত', 'আট', 'নয়'];
+    const teens = ['দশ', 'এগারো', 'বারো', 'তেরো', 'চৌদ্দ', 'পনেরো', 'ষোল', 'সতেরো', 'আঠারো', 'উনিশ'];
+    const tens = ['', '', 'বিশ', 'ত্রিশ', 'চল্লিশ', 'পঞ্চাশ', 'ষাট', 'সত্তর', 'আশি', 'নব্বই'];
+    const hundreds = ['', 'একশ', 'দুইশ', 'তিনশ', 'চারশ', 'পাঁচশ', 'ছয়শ', 'সাতশ', 'আটশ', 'নয়শ'];
+    
+    const crore = 10000000;
+    const lakh = 100000;
+    const thousand = 1000;
+    const hundred = 100;
+    
+    if (number === 0) return 'শূন্য';
+    
+    let words = '';
+    
+    // Handle crore part
+    if (number >= crore) {
+        words += numberToBengaliWords(Math.floor(number / crore)) + ' কোটি ';
+        number %= crore;
+    }
+    
+    // Handle lakh part
+    if (number >= lakh) {
+        words += numberToBengaliWords(Math.floor(number / lakh)) + ' লক্ষ ';
+        number %= lakh;
+    }
+    
+    // Handle thousand part
+    if (number >= thousand) {
+        words += numberToBengaliWords(Math.floor(number / thousand)) + ' হাজার ';
+        number %= thousand;
+    }
+    
+    // Handle hundred part
+    if (number >= hundred) {
+        words += hundreds[Math.floor(number / hundred)] + ' ';
+        number %= hundred;
+    }
+    
+    // Handle tens and units
+    if (number > 0) {
+        if (number < 10) {
+            words += units[number];
+        } else if (number < 20) {
+            words += teens[number - 10];
+        } else {
+            words += tens[Math.floor(number / 10)];
+            if (number % 10 > 0) {
+                words += ' ' + units[number % 10];
+            }
+        }
+    }
+    
+    return words.trim();
+}
+
+function convertAmountToBengaliWords(amount) {
+    const taka = Math.floor(amount);
+    const poisha = Math.round((amount - taka) * 100);
+    
+    let words = '';
+    
+    if (taka > 0) {
+        words += numberToBengaliWords(taka) + ' টাকা';
+    }
+    
+    if (poisha > 0) {
+        if (words !== '') words += ' এবং ';
+        words += numberToBengaliWords(poisha) + ' পয়সা';
+    }
+    
+    if (words === '') {
+        words = 'শূন্য টাকা';
+    }
+    
+    return words + ' মাত্র';
+}
+
 // Load customers and products on page load
 $(document).ready(function() {
     loadCustomers();
     loadProducts();
-    togglePriceSection(); // Initialize on page load
+    togglePriceSection(); // Initialize price section visibility
     setupAmountCalculation();
 });
 
@@ -14,6 +93,21 @@ function setupAmountCalculation() {
         const amount = price * quantity;
         $('#new_product_amount').val(amount.toFixed(2));
     });
+    
+    // Update amount in words when total changes
+    $('#total_amount').on('change input', function() {
+        updateAmountInWords();
+    });
+    
+    $('#discount').on('change input', function() {
+        updateAmountInWords();
+    });
+}
+
+function updateAmountInWords() {
+    const totalAmount = parseFloat($('#total_amount').val()) || 0;
+    const amountInWords = convertAmountToBengaliWords(totalAmount);
+    $('#amount_in_words').text(amountInWords);
 }
 
 function loadCustomers() {
@@ -57,10 +151,13 @@ function togglePriceSection() {
         // For cash memo, SHOW price fields
         $('.price-field').show();
         $('.price-column').show();
+        $('.calculation-section').show();
         
         // Show calculation section only if prices exist
         calculateSubtotal();
     }
+    
+    updateAmountInWords();
 }
 
 // Update memo number based on type selection
@@ -86,6 +183,7 @@ function addManualProduct() {
     const productName = $('#new_product_name').val();
     const productBags = parseFloat($('#new_product_bags').val()) || 0;
     const productQuantity = parseFloat($('#new_product_quantity').val()) || 0;
+    const productUnit = $('#new_product_unit').val();
     const productPrice = parseFloat($('#new_product_price').val()) || 0;
     const productAmount = parseFloat($('#new_product_amount').val()) || 0;
     const cashMemoType = $('#cash_memo_type').val();
@@ -103,7 +201,15 @@ function addManualProduct() {
                 <input type="text" class="manual-product-name" value="${productName}" readonly style="border: none; background: transparent; width: 100%;">
             </td>
             <td><input type="number" class="bags" step="0.01" value="${productBags}" placeholder="বস্তা"></td>
-            <td><input type="number" class="quantity" step="0.01" value="${productQuantity}" placeholder="পরিমাণ"></td>
+            <td>
+                <div class="quantity-with-unit">
+                    <input type="number" class="quantity" step="0.01" value="${productQuantity}" placeholder="পরিমাণ" style="flex: 1;">
+                    <select class="quantity-unit" style="width: 80px; margin-left: 5px;">
+                        <option value="কে.জি" ${productUnit === 'কে.জি' ? 'selected' : ''}>কে.জি</option>
+                        <option value="টা" ${productUnit === 'টা' ? 'selected' : ''}>টা</option>
+                    </select>
+                </div>
+            </td>
             <td class="price-column"><input type="number" class="unit-price" step="0.01" value="${productPrice}" placeholder="দর" onchange="calculateRowTotal(this)"></td>
             <td class="price-column"><input type="number" class="amount" step="0.01" value="${productAmount}" placeholder="টাকা" readonly></td>
             <td><button type="button" class="remove-btn" onclick="removeRow(this)">মুছুন</button></td>
@@ -115,6 +221,7 @@ function addManualProduct() {
     $('#new_product_name').val('');
     $('#new_product_bags').val('0');
     $('#new_product_quantity').val('1');
+    $('#new_product_unit').val('কে.জি');
     $('#new_product_price').val('');
     $('#new_product_amount').val('');
     
@@ -162,6 +269,7 @@ function calculateSubtotal() {
     if (isChalan) {
         $('#subtotal').val('0');
         $('#total_amount').val('0');
+        updateAmountInWords();
         return;
     }
     
@@ -185,9 +293,11 @@ function calculateTotal() {
         const discount = parseFloat($('#discount').val()) || 0;
         const total = subtotal - discount;
         $('#total_amount').val(total > 0 ? total.toFixed(2) : '0');
+        updateAmountInWords();
     }
 }
 
+// Add new row function
 function addNewRow() {
     const cashMemoType = $('#cash_memo_type').val();
     const isChalan = cashMemoType === 'চালান';
@@ -200,7 +310,15 @@ function addNewRow() {
                 </select>
             </td>
             <td><input type="number" class="bags" step="0.01" value="0" placeholder="বস্তা"></td>
-            <td><input type="number" class="quantity" step="0.01" value="1" placeholder="পরিমাণ"></td>
+            <td>
+                <div class="quantity-with-unit">
+                    <input type="number" class="quantity" step="0.01" value="1" placeholder="পরিমাণ" style="flex: 1;">
+                    <select class="quantity-unit" style="width: 80px; margin-left: 5px;">
+                        <option value="কে.জি">কে.জি</option>
+                        <option value="টা">টা</option>
+                    </select>
+                </div>
+            </td>
             <td class="price-column"><input type="number" class="unit-price" step="0.01" placeholder="দর" onchange="calculateRowTotal(this)"></td>
             <td class="price-column"><input type="number" class="amount" step="0.01" placeholder="টাকা" readonly></td>
             <td><button type="button" class="remove-btn" onclick="removeRow(this)">মুছুন</button></td>
@@ -282,7 +400,7 @@ function saveMemo() {
     });
 }
 
-// Download Memo as PDF - SIMPLE WORKING VERSION
+// Download Memo as PDF
 function downloadMemo() {
     // Check if memo is generated
     if (!$('#memo_preview').html().trim()) {
@@ -292,23 +410,25 @@ function downloadMemo() {
 
     const memoNumber = $('#memo_number').val();
     const memoType = $('#memo_type').val();
-    const memoTypeText = (memoType === 'C') ? 'মেমো' : 'চালান';
+    const memoTypeText = (memoType === 'B') ? 'মেমো' : 'চালান';
     
     // Get the memo preview element
     const element = document.getElementById('memo_preview');
     
-    // Simple options for PDF
+    // Options for PDF
     const options = {
-        margin: 10,
+        margin: 0,
         filename: `${memoNumber}_${memoTypeText}.pdf`,
         image: { type: 'jpeg', quality: 0.98 },
         html2canvas: { 
             scale: 2,
-            useCORS: true
+            useCORS: true,
+            width: 800,
+            height: 1120
         },
         jsPDF: { 
-            unit: 'mm', 
-            format: 'a4', 
+            unit: 'px', 
+            format: [800, 1120],
             orientation: 'portrait' 
         }
     };
@@ -328,8 +448,9 @@ function getMemoData() {
         const manualProduct = $(this).find('.manual-product-name');
         const bags = parseFloat($(this).find('.bags').val()) || 0;
         const quantity = parseFloat($(this).find('.quantity').val()) || 0;
-        const unitPrice = isChalan ? 0 : (parseFloat($(this).find('.unit-price').val()) || 0);
-        const amount = isChalan ? 0 : (parseFloat($(this).find('.amount').val()) || 0);
+        const unit = $(this).find('.quantity-unit').val() || 'কে.জি';
+        const unitPrice = parseFloat($(this).find('.unit-price').val()) || 0;
+        const amount = parseFloat($(this).find('.amount').val()) || 0;
         
         let productName = '';
         let productId = '';
@@ -348,6 +469,7 @@ function getMemoData() {
                 product_name: productName,
                 bags: bags,
                 quantity: quantity,
+                unit: unit,
                 unit_price: unitPrice,
                 amount: amount
             });
@@ -366,16 +488,15 @@ function getMemoData() {
         customer_name: $('#customer_name').val(),
         customer_phone: $('#customer_phone').val(),
         customer_address: $('#customer_address').val(),
-        subtotal: isChalan ? 0 : (parseFloat($('#subtotal').val()) || 0),
-        discount: isChalan ? 0 : (parseFloat($('#discount').val()) || 0),
-        total: isChalan ? 0 : (parseFloat($('#total_amount').val()) || 0),
+        subtotal: parseFloat($('#subtotal').val()) || 0,
+        discount: parseFloat($('#discount').val()) || 0,
+        total: parseFloat($('#total_amount').val()) || 0,
         items: items
     };
 }
 
 // Validate memo data
 function validateMemoData(memoData) {
-    // Check if at least one product is added
     let hasProducts = false;
     $('.item-row').each(function() {
         const productSelect = $(this).find('.product-select');
@@ -395,15 +516,16 @@ function validateMemoData(memoData) {
     return true;
 }
 
-// Generate memo preview HTML
+// Generate memo preview HTML - UPDATED: Show all columns but keep prices blank for চালান
 function generateMemoPreview(data) {
     // Format date in Bangla style
-    const memoDate = new Date(data.memo_date).toLocaleDateString('bn-BD');
+    const memoDate = new Date(data.memo_date);
+    const day = memoDate.getDate();
+    const month = memoDate.getMonth() + 1;
+    const year = memoDate.getFullYear();
     
-    // Determine memo type for display
-    const memoType = data.memo_number.charAt(0);
-    const memoTypeDisplay = (memoType === 'C') ? 'মেমো' : 'চালান';
     const isChalan = data.cash_memo_type === 'চালান';
+    const amountInWords = convertAmountToBengaliWords(data.total);
     
     let itemsHtml = '';
     let counter = 1;
@@ -411,110 +533,103 @@ function generateMemoPreview(data) {
     data.items.forEach(function(item) {
         if (item.product_name) {
             const bags = item.bags > 0 ? item.bags : '';
-            const quantity = item.quantity;
-            const unitPrice = (!isChalan && item.unit_price > 0) ? item.unit_price.toFixed(2) : '';
-            const amount = (!isChalan && item.amount > 0) ? item.amount.toFixed(2) : '';
+            const quantity = item.quantity + ' ' + (item.unit || 'কে.জি');
+            
+            // For চালান, keep দর and টাকা columns blank
+            const unitPrice = isChalan ? '' : (item.unit_price > 0 ? item.unit_price.toFixed(2) : '');
+            const amount = isChalan ? '' : (item.amount > 0 ? item.amount.toFixed(2) : '');
             
             itemsHtml += `
                 <tr>
-                    <td>${counter}</td>
-                    <td class="item-description">${item.product_name}</td>
-                    <td>${bags}</td>
-                    <td>${quantity}</td>
-                    <td>${unitPrice}</td>
-                    <td>${amount}</td>
+                    <td class="col-num">${counter}</td>
+                    <td class="desc">${item.product_name}</td>
+                    <td class="col-shaded">${bags}</td>
+                    <td class="col-qty">${quantity}</td>
+                    <td class="col-rate">${unitPrice}</td>
+                    <td class="col-amount">${amount}</td>
                 </tr>`;
             counter++;
         }
     });
     
     // Add empty rows for traditional memo look
-    for (let i = counter; i <= 8; i++) {
+    for (let i = counter; i <= 6; i++) {
         itemsHtml += `
             <tr>
-                <td>${i}</td>
-                <td class="item-description">&nbsp;</td>
-                <td>&nbsp;</td>
-                <td>&nbsp;</td>
-                <td>&nbsp;</td>
-                <td>&nbsp;</td>
+                <td class="col-num">${i}</td>
+                <td class="desc" style="height:40px;"></td>
+                <td class="col-shaded"></td>
+                <td class="col-qty"></td>
+                <td class="col-rate"></td>
+                <td class="col-amount"></td>
             </tr>`;
     }
     
-    // Show totals only if it's not চালান and there are prices
-    const hasPrices = !isChalan && data.items.some(item => item.unit_price > 0);
-    const totalsHtml = hasPrices ? `
-        <div class="total-section-bangla">
-            <table class="total-table-bangla" align="right">
-                <tr>
-                    <td width="70%" align="right">মোট:</td>
-                    <td width="30%" align="right">${data.subtotal.toFixed(2)}৳</td>
-                </tr>
-                <tr>
-                    <td align="right">ছাড়:</td>
-                    <td align="right">${data.discount.toFixed(2)}৳</td>
-                </tr>
-                <tr class="grand-total-bangla">
-                    <td align="right"><strong>সর্বমোট:</strong></td>
-                    <td align="right"><strong>${data.total.toFixed(2)}৳</strong></td>
-                </tr>
-            </table>
-        </div>
-    ` : '';
+    // Total amount - show for both memo types
+    const totalAmount = isChalan ? '' : data.total.toFixed(2);
     
     return `
-    <div class="bangla-memo">
-        <div class="memo-header-bangla">
-            <div class="shop-name-bangla">${data.shop_name || 'আপনার কম্পানির নাম'}</div>
-            <div class="shop-address-bangla">${data.shop_address || 'আইডেন সেন্টার, নিউ মার্কেট, ঢাকা'}</div>
-            <div class="shop-contact-bangla">${data.cash_memo_type || 'ক্যাশ মেমো'} | মোবাইল: ${data.mobile_number || '০১৭১২-৩৪৫৬৭৮'}</div>
-            <div class="business-type-bangla">${data.business_type || 'এখানে গার্মেন্টস কোয়ালিটি ওয়েস্টিজ মাল ক্রয় ও বিক্রয় করা হয়'}</div>
+    <div class="preview-sheet">
+        <header class="brand">
+            <h1>${data.shop_name || 'ব্রাদার্স এন্টারপ্রাইজ'}</h1>
+            <div class="subbox">${data.cash_memo_type || 'ক্যাশ মেমো'}</div>
+            <div class="contacts">মোবাইল: ${data.mobile_number || '01679610868, 01707387608'}</div>
+            <div class="address">${data.business_type || 'এখানে গার্মেন্টস কোয়ালিটি ওয়েজিং মাল ক্রয় ও বিক্রয় করা হয়।'}<br>${data.shop_address || 'আদমজী নগর-১৪৩১, সিদ্দিরগঞ্জ, নারায়ণগঞ্জ।'}</div>
+        </header>
+
+        <div class="info-row">
+            <div class="meta">
+                <div class="label">নং:</div>
+                <div class="box">${data.memo_number}</div>
+            </div>
+
+            <div class="meta" style="align-items:flex-end;">
+                <div class="label">তারিখ:</div>
+                <div style="display:flex; gap:8px;">
+                    <div class="box">${day}</div>
+                    <div class="box">${month}</div>
+                    <div class="box">${year}</div>
+                </div>
+            </div>
         </div>
-        
-        <div class="memo-title-bangla">${memoTypeDisplay}</div>
-        
-        <table class="memo-info-table">
-            <tr>
-                <td width="30%">নং:</td>
-                <td width="70%">${data.memo_number}</td>
-            </tr>
-            <tr>
-                <td>তারিখ:</td>
-                <td>${memoDate}</td>
-            </tr>
-            <tr>
-                <td>গ্রাহক:</td>
-                <td>${data.customer_name || 'সাধারণ গ্রাহক'}</td>
-            </tr>
-            <tr>
-                <td>গ্রাহকের ঠিকানা:</td>
-                <td>${data.customer_address || ''}</td>
-            </tr>
-        </table>
-        
-        <table class="items-table-bangla">
+
+        <div class="name-row">
+            নাম: ${data.customer_name || 'সাধারণ গ্রাহক'}
+        </div>
+
+        <table class="items">
             <thead>
                 <tr>
-                    <th width="5%">নং</th>
-                    <th width="35%">পণ্যের বিবরণ</th>
-                    <th width="10%">বস্তা</th>
-                    <th width="10%">পরিমাণ</th>
-                    <th width="10%">দর</th>
-                    <th width="10%">টাকা</th>
+                    <th style="width:56px;">সংখ্যা</th>
+                    <th>মালের বিবরণ</th>
+                    <th class="col-shaded">বস্তা</th>
+                    <th class="col-bags">পরিমান</th>
+                    <th class="col-rate">দর</th>
+                    <th class="col-amount">টাকা</th>
                 </tr>
             </thead>
             <tbody>
                 ${itemsHtml}
+                <tr>
+                    <td colspan="5" style="border-right:none; padding:10px; text-align:right; font-weight:700;">মোট</td>
+                    <td class="total-cell">${totalAmount}</td>
+                </tr>
             </tbody>
         </table>
-        
-        ${totalsHtml}
-        
-        <div class="memo-footer-bangla">
-            <div class="thank-you-bangla">ধন্যবাদান্তে</div>
-            <div class="signature-line">
-                ..............................................<br>
-                <em>দোকানদারের স্বাক্ষর</em>
+
+        <div class="notes">কথায়ঃ ${amountInWords}</div>
+
+        <!-- Signature section shows for BOTH memo types -->
+        <div class="signature-section">
+            <div class="signature-container">
+                <div class="signature-line left">
+                    <div class="line"></div>
+                    <div>ক্রেতার স্বাক্ষর</div>
+                </div>
+                <div class="signature-line right">
+                    <div class="line"></div>
+                    <div>বিক্রেতার স্বাক্ষর</div>
+                </div>
             </div>
         </div>
     </div>`;
@@ -530,8 +645,7 @@ function printMemo() {
 }
 
 function clearForm() {
-    // Keep shop info but reset memo data
-    updateMemoNumber(); // Generate new memo number
+    updateMemoNumber();
     $('#memo_date').val(new Date().toISOString().slice(0,10));
     $('#customer_id').val('');
     $('#customer_name').val('');
@@ -546,7 +660,15 @@ function clearForm() {
                 </select>
             </td>
             <td><input type="number" class="bags" step="0.01" value="0" placeholder="বস্তা"></td>
-            <td><input type="number" class="quantity" step="0.01" value="1" placeholder="পরিমাণ"></td>
+            <td>
+                <div class="quantity-with-unit">
+                    <input type="number" class="quantity" step="0.01" value="1" placeholder="পরিমাণ" style="flex: 1;">
+                    <select class="quantity-unit" style="width: 80px; margin-left: 5px;">
+                        <option value="কে.জি">কে.জি</option>
+                        <option value="টা">টা</option>
+                    </select>
+                </div>
+            </td>
             <td class="price-column"><input type="number" class="unit-price" step="0.01" placeholder="দর" onchange="calculateRowTotal(this)"></td>
             <td class="price-column"><input type="number" class="amount" step="0.01" placeholder="টাকা" readonly></td>
             <td><button type="button" class="remove-btn" onclick="removeRow(this)">মুছুন</button></td>
@@ -555,8 +677,9 @@ function clearForm() {
     $('#subtotal').val('0');
     $('#discount').val('0');
     $('#total_amount').val('0');
-    togglePriceSection(); // Reset price section visibility
+    togglePriceSection();
     $('#memo_preview_section').hide();
     currentMemoData = null;
     loadProducts();
+    updateAmountInWords();
 }

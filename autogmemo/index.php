@@ -1,8 +1,8 @@
 <?php
 include 'config.php';
 
-// Generate memo number based on type (C for memo, B for invoice)
-$memo_type = isset($_GET['type']) ? $_GET['type'] : 'C';
+// Generate memo number based on type (B for memo, C for invoice)
+$memo_type = isset($_GET['type']) ? $_GET['type'] : 'B';
 $memo_number = generateMemoNumber($pdo, $memo_type);
 ?>
 <!DOCTYPE html>
@@ -47,13 +47,11 @@ $memo_number = generateMemoNumber($pdo, $memo_type);
                     </div>
                 </div>
                 <div class="form-row">
-                    <div class="form-group full-width">
+                    <div class="form-group half-width">
                         <label>ব্যবসার ধরন:</label>
-                        <input type="text" id="business_type" value="এখানে গার্মেন্টস কোয়ালিটি ওয়েস্টিজ মাল ক্রয় ও বিক্রয় করা হয়" readonly style="background-color: #f8f9fa; font-weight: bold; text-align: center;">
+                        <input type="text" id="business_type" placeholder="আপনার ব্যবসার ধরন লিখুন" value="এখানে গার্মেন্টস কোয়ালিটি ওয়েস্টিজ মাল ক্রয় ও বিক্রয় করা হয়">
                     </div>
-                </div>
-                <div class="form-row">
-                    <div class="form-group full-width">
+                    <div class="form-group half-width">
                         <label>ঠিকানা:</label>
                         <input type="text" id="shop_address" placeholder="কম্পানির ঠিকানা লিখুন" value="আইডেন সেন্টার, নিউ মার্কেট, ঢাকা">
                     </div>
@@ -65,11 +63,11 @@ $memo_number = generateMemoNumber($pdo, $memo_type);
                 <div class="form-group">
                     <label>নং:</label>
                     <div class="memo-number-container">
-                        <select id="memo_type" onchange="updateMemoNumber()" style="width: 80px; margin-right: 10px;">
-                            <option value="C">মেমো (C)</option>
-                            <option value="B">চালান (B)</option>
+                        <select id="memo_type" onchange="updateMemoNumber()" class="memo-type-select">
+                            <option value="B">মেমো (B)</option>
+                            <option value="C">চালান (C)</option>
                         </select>
-                        <input type="text" id="memo_number" value="<?php echo $memo_number; ?>" readonly style="flex: 1;">
+                        <input type="text" id="memo_number" value="<?php echo $memo_number; ?>" readonly class="memo-number-input">
                     </div>
                 </div>
                 <div class="form-group">
@@ -121,7 +119,13 @@ $memo_number = generateMemoNumber($pdo, $memo_type);
                         </div>
                         <div class="form-group">
                             <label>পরিমাণ:</label>
-                            <input type="number" id="new_product_quantity" placeholder="পরিমাণ" step="0.01" value="1">
+                            <div class="quantity-with-unit">
+                                <input type="number" id="new_product_quantity" placeholder="পরিমাণ" step="0.01" value="1">
+                                <select id="new_product_unit">
+                                    <option value="কে.জি">কে.জি</option>
+                                    <option value="টা">টা</option>
+                                </select>
+                            </div>
                         </div>
                         <div class="form-group price-field">
                             <label>দর:</label>
@@ -156,7 +160,15 @@ $memo_number = generateMemoNumber($pdo, $memo_type);
                                 </select>
                             </td>
                             <td><input type="number" class="bags" step="0.01" value="0" placeholder="বস্তা"></td>
-                            <td><input type="number" class="quantity" step="0.01" value="1" placeholder="পরিমাণ"></td>
+                            <td>
+                                <div class="quantity-with-unit">
+                                    <input type="number" class="quantity" step="0.01" value="1" placeholder="পরিমাণ">
+                                    <select class="quantity-unit">
+                                        <option value="কে.জি">কে.জি</option>
+                                        <option value="টা">টা</option>
+                                    </select>
+                                </div>
+                            </td>
                             <td class="price-column"><input type="number" class="unit-price" step="0.01" placeholder="দর" onchange="calculateRowTotal(this)"></td>
                             <td class="price-column"><input type="number" class="amount" step="0.01" placeholder="টাকা" readonly></td>
                             <td><button type="button" class="remove-btn" onclick="removeRow(this)">মুছুন</button></td>
